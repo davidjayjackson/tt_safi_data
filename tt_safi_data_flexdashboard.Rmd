@@ -1,0 +1,170 @@
+---
+title: "Studying African Farmer-Led Irrigation"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(tidyverse)
+library(janitor)
+library(RSQLite)
+```
+
+```{r}
+rm(list=ls())
+con <- dbConnect(SQLite(), dbname="../DATA/tidytuesday.sqlite3")
+```
+```{r}
+safi <- dbGetQuery(con, "SELECT * FROM safi_data")
+```
+```{r}
+safi$interview_date <- as.Date(safi$interview_date)
+```
+```{r}
+# Splitting the items_owned variable into new rows and trim spaces
+safi <- safi %>%
+  separate_rows(items_owned, sep = ";") %>%
+  mutate(items_owned = str_trim(items_owned))
+
+# Splitting the items_owned variable into new rows and trim spaces
+safi <- safi %>%
+  separate_rows(months_lack_food, sep = ";") %>%
+  mutate(months_lack_food = str_trim(months_lack_food))
+```
+
+# HOME
+
+Column {data-width=450}
+-----------------------------------------------------------------------
+
+### Bar plot of months lacking food
+
+```{r}
+safi |> count(months_lack_food) |>
+ggplot(aes(x = reorder(months_lack_food,n),y=n,fill=months_lack_food)) +
+  geom_col() +
+  xlab("Months Lacking Food") +
+  ylab("Count")
+
+```
+
+
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Bar plot of wall types
+
+```{r}
+
+# Count the frequencies of each wall type
+wall_type_counts <- count(safi, respondent_wall_type)
+
+# Sort the wall types based on count
+sorted_wall_types <- wall_type_counts %>%
+  arrange(desc(n)) %>%
+  pull(respondent_wall_type)
+
+# Reorder the levels of respondent_wall_type based on sorted_wall_types
+safi$respondent_wall_type <- factor(safi$respondent_wall_type, levels = sorted_wall_types)
+
+# Plot the sorted bars by count
+ggplot(safi, aes(x = respondent_wall_type, fill = respondent_wall_type)) +
+  geom_bar() +
+  xlab("Wall Type") +
+  ylab("Count") +
+  theme(axis.text.x = element_blank()) +
+  labs(title = "Respondent Wall Type")
+
+```
+
+### Histogram of number of rooms
+
+```{r}
+library(ggplot2)
+
+ggplot(safi, aes(x = rooms, fill = factor(rooms))) +
+  geom_histogram(binwidth = 1, color = "black") +
+  xlab("Number of Rooms") +
+  ylab("Count") +
+  ggtitle("Distribution of Number of Rooms") +
+  scale_fill_discrete(name = "Number of Rooms") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 16, face = "bold"),
+    axis.title = element_text(size = 12),
+    axis.text = element_text(size = 10),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  ) +
+  theme(axis.text.x = element_blank()) 
+
+```
+
+# Page 2
+
+## Column {data-width=350}
+
+
+
+### Bar plot of items owned
+
+```{r}
+ggplot(safi, aes(x = items_owned,fill=items_owned)) +
+  geom_bar() +
+  xlab("Items Owned") +
+  ylab("Count") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title ="Bar plot of items owned")
+
+```
+
+```{r}
+ggplot(safi, aes(x = village,fill=village)) +
+  geom_bar() +
+  xlab("Village") +
+  ylab("Count") +
+  theme(axis.text.x = element_blank()) +
+  labs(title ="Households by Village")
+```
+
+## Column {data-width=350}
+
+### Histogram of number of meals per day
+
+```{r}
+
+ggplot(safi, aes(x = no_meals, fill = factor(no_meals))) +
+  geom_histogram(binwidth = 1, color = "black") +
+  xlab("Number of Meals per Day") +
+  ylab("Count") +
+  ggtitle("Number of Meals per Day") +
+  scale_fill_discrete(name = "Number of Meals") +
+  labs(caption = "Data source: SAFI Survey") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 16, face = "bold"),
+    plot.caption = element_text(size = 10, hjust = 1),
+    axis.title = element_text(size = 12),
+    axis.text = element_text(size = 10),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+
+```
+
+
+###  Count of Households by Village
+
+```{r}
+ggplot(safi, aes(x = village,fill=village)) +
+  geom_bar() +
+  xlab("Village") +
+  ylab("Count") +
+  theme(axis.text.x = element_blank()) +
+  labs(title ="Households by Village")
+```

@@ -1,0 +1,208 @@
+---
+title: "Studying African Farmer-Led Irrigation"
+format: html
+editor: visual
+---
+
+## Quarto
+
+```{r setup, include=FALSE, echo = FALSE,message=FALSE}
+library(DBI)
+library(duckdb)
+library(tidyverse)
+library(janitor)
+```
+
+```{r}
+rm(list = ls())
+dbDisconnect(con)
+```
+```{r}
+con <- dbConnect(duckdb(),"../DATA/tidytuesday.duckdb")
+```
+```{r}
+data <- dbGetQuery(con,"SELECT * FROM safi_data ")
+dbDisconnect(con)
+```
+```{r}
+# data <- data %>%
+  separate_rows(items_owned, sep = ";")
+
+# Splitting the items_owned variable into new rows and trim spaces
+data <- data %>%
+  separate_rows(items_owned, sep = ";") %>%
+  mutate(items_owned = str_trim(items_owned))
+
+
+data <- data %>%
+  separate_rows(months_lack_food, sep = ";")
+
+# Splitting the items_owned variable into new rows and trim spaces
+data <- data %>%
+  separate_rows(items_owned, sep = ";") %>%
+  mutate(items_owned = str_trim(months_lack_food))
+
+```
+
+
+```{r}
+
+
+# Summary statistics
+summary(data)
+
+# Count the number of missing values in each variable
+colSums(is.na(data))
+
+# Exploring individual variables
+
+# Village
+table(data$village)
+
+# Interview date
+table(data$interview_date)
+
+# Number of members in the household
+summary(data$no_membrs)
+
+# Number of years living in the village
+summary(data$years_liv)
+
+# Type of walls the house has
+table(data$respondent_wall_type)
+
+# Number of rooms in the main house used for sleeping
+summary(data$rooms)
+
+# Membership of an irrigation association
+table(data$memb_assoc)
+
+# Affected by conflicts with other irrigators
+table(data$affect_conflicts)
+
+# Livestock count
+summary(data$liv_count)
+
+# Items owned by the household
+table(data$items_owned)
+
+# Number of meals per day
+summary(data$no_meals)
+
+# Months lacking food
+table(data$months_lack_food)
+
+# Instance ID (can be skipped for analysis)
+```
+
+# Bar plot of village distribution
+
+```{r}
+ggplot(data, aes(x = village)) +
+  geom_bar() +
+  xlab("Village") +
+  ylab("Count")
+
+```
+
+# Histogram of number of members in the household
+
+```{r}
+
+ggplot(data, aes(x = no_membrs)) +
+  geom_histogram(binwidth = 1) +
+  xlab("Number of Members") +
+  ylab("Count")
+
+```
+
+# Boxplot of years living in the village
+
+```{r}
+ggplot(data, aes(y = years_liv)) +
+  geom_boxplot() +
+  ylab("Years Living in the Village")
+
+```
+
+# Bar plot of wall types
+
+```{r}
+ggplot(data, aes(x = respondent_wall_type)) +
+  geom_bar() +
+  xlab("Wall Type") +
+  ylab("Count")
+
+```
+
+# Histogram of number of rooms
+
+```{r}
+ggplot(data, aes(x = rooms)) +
+  geom_histogram(binwidth = 1) +
+  xlab("Number of Rooms") +
+  ylab("Count")
+
+```
+
+# Bar plot of membership of an irrigation association
+
+```{r}
+ggplot(data, aes(x = memb_assoc)) +
+  geom_bar() +
+  xlab("Membership of Irrigation Association") +
+  ylab("Count")
+
+```
+
+# Bar plot of conflicts affecting irrigators
+
+```{r}
+ggplot(data, aes(x = affect_conflicts)) +
+  geom_bar() +
+  xlab("Affected by Conflicts with Irrigators") +
+  ylab("Count")
+
+```
+
+# Histogram of livestock count
+
+```{r}
+ggplot(data, aes(x = liv_count)) +
+  geom_histogram(binwidth = 1) +
+  xlab("Livestock Count") +
+  ylab("Count")
+
+```
+
+# Bar plot of items owned
+
+```{r}
+ggplot(data, aes(x = items_owned)) +
+  geom_bar() +
+  xlab("Items Owned") +
+  ylab("Count") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+# Histogram of number of meals per day
+
+```{r}
+ggplot(data, aes(x = no_meals)) +
+  geom_histogram(binwidth = 1) +
+  xlab("Number of Meals per Day") +
+  ylab("Count")
+
+```
+
+# Bar plot of months lacking food
+
+```{r}
+ggplot(data, aes(x = months_lack_food)) +
+  geom_bar() +
+  xlab("Months Lacking Food") +
+  ylab("Count")
+
+```
+
